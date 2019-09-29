@@ -263,6 +263,18 @@ contract RefundEscrow is ConditionalEscrow {
         }
         require(found_address == true, "Only investors in whitelist can invest.");
         require(correct_amount == true, "Investors can only invest in the amount specified in the whitelist.");
+        
+        address[] memory existing_investors = super.investors();
+        uint256 existing_investors_length = existing_investors.length;
+        bool already_invested = false;
+        for (uint256 i = 0; i < existing_investors_length; i++) {
+            if (existing_investors[i] == msg.sender) {
+                already_invested = true;
+                break;
+            }
+        }
+        require(already_invested == false, "You've already invested before.");
+        
         super.deposit();
     }
     
