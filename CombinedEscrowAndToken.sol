@@ -229,6 +229,14 @@ contract RefundEscrow is ConditionalEscrow {
     }
     
     function add_to_whitelist(address investor, uint256 amount) public onlyPrimary {
+        bool already_exists = false;
+        for (uint256 i; i < _whitelist_length; i++) {
+            if (investor == _whitelist_investors[i]) {
+                already_exists = true;
+                break;
+            }
+        }
+        require(already_exists == false, "The to-be-added whitelisted investor already exists in the whitelist.");
         _whitelist_investors.push(investor);
         _whitelist_amounts.push(amount);
         _whitelist_length = _whitelist_length.add(1);
