@@ -198,6 +198,9 @@ contract RefundEscrow is ConditionalEscrow {
 
     State private _state;
     address payable private _beneficiary;
+    address[] _whitelist_investors;
+    uint256[] _whitelist_amounts;
+    uint256 _whitelist_length;
 
     constructor (address payable beneficiary) public {
         require(beneficiary != address(0), "RefundEscrow: beneficiary is the zero address");
@@ -216,9 +219,42 @@ contract RefundEscrow is ConditionalEscrow {
     function totalBalance() public view returns (uint256) {
         return address(this).balance;
     }
+    
+    function whitelist_investors() public view returns (address[] memory) {
+        return _whitelist_investors;
+    }
+    
+    function whitelist_amounts() public view returns (uint256[] memory) {
+        return _whitelist_amounts;
+    }
+    
+    function add_to_whitelist(address investor, uint256 amount) public onlyPrimary {
+        _whitelist_investors.push(investor);
+        _whitelist_amounts.push(amount);
+        _whitelist_length = _whitelist_length.add(1);
+    }
+    
+    function clear_whitelist() public onlyPrimary {
+        delete _whitelist_investors;
+        delete _whitelist_amounts;
+        _whitelist_length = 0;
+    }
 
     function deposit() public payable {
         require(_state == State.Active, "RefundEscrow: can only deposit while active");
+        bool found_address = false;
+        bool correct_amount = false;
+        for (uint256 i; i < _whitelist_length; i++) {
+            if (msg.sender == _whitelist_investors[i]) {
+                found_address = true;
+                if (msg.value == _whitelist_amounts[i]) {
+                    correct_amount = true;
+                }
+                break;
+            }
+        }
+        require(found_address == true, "Only investors in whitelist can invest.");
+        require(correct_amount == true, "Investors can only invest in the amount specified in the whitelist.");
         super.deposit();
     }
     
