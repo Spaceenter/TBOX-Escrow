@@ -278,6 +278,16 @@ contract RefundEscrow is ConditionalEscrow {
         super.deposit();
     }
     
+    function refundAll() public payable onlyPrimary {
+        require(_state == State.Refunding, "RefundAll: can only refund all while in Refunding state.");
+        address[] memory investors = super.investors();
+        for (uint256 i = 0; i < investors.length; i++) {
+            address payable ap = address(uint160(investors[i]));
+            uint256 amount = super.depositsOf(investors[i]);
+            ap.transfer(amount);
+        }
+    }
+    
     function activate() public onlyPrimary {
         require(_state == State.Closed, "RefundEscrow: can only activate while closed");
         _state = State.Active;
